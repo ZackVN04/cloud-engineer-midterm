@@ -38,6 +38,7 @@ const service = new gcp.cloudrun.Service("midterm-cloud-run", {
                     { name: "AUTHOR", value: "Võ Văn Khánh" }
                 ]
             }],
+            serviceAccountName: "midterm-app-runtime@intern-gcp-project-101.iam.gserviceaccount.com", // Gán SA bảo mật
         },
     },
     traffics: [{
