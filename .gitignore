@@ -1,0 +1,12 @@
+# Ignore node_modules globally
+node_modules/
+dist/
+bin/
+build/
+
+# Ignore local Pulumi state backups and local configs
+.pulumi/
+.sst/
+*.log
+.env
+gcp-key.json

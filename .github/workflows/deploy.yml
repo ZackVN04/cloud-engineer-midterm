@@ -1,0 +1,57 @@
+name: Midterm GitOps CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Tải code từ GitHub
+    - name: Checkout Code
+      uses: actions/checkout@v7
+
+    # 2. Cài đặt Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: './infra/package-lock.json'
+
+    # 3. Cài đặt thư viện của Pulumi ở thư mục infra
+    - name: Install Pulumi Dependencies
+      run: |
+        cd infra
+        npm ci
+
+    # 4. Cài đặt Pulumi CLI trên Runner
+    - name: Set up Pulumi CLI
+      uses: pulumi/actions@v4
+
+    # 5. Đăng nhập vào GCP dùng SA Key
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v3
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    # 6. Cài đặt gcloud SDK
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v3
+
+    # 7. Cấu hình Docker để login vào Artifact Registry của GCP
+    - name: Configure Docker for Registry
+      run: |
+        gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+
+    # 8. Chạy lệnh Pulumi Deploy dạng Local State
+    - name: Deploy Infrastructure via Pulumi (Local State)
+      run: |
+        pulumi login --local
+        pulumi stack select dev --create
+        pulumi up --yes --skip-preview
+      working-directory: ./infra
+      env:
+        PULUMI_CONFIG_PASSPHRASE: "my-secret-key"
